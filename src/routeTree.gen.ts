@@ -21,6 +21,7 @@ import { Route as SystemRouteImport } from './routes/system'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as ResearchIndexRouteImport } from './routes/research.index'
 import { Route as ResearchSymbolRouteImport } from './routes/research.$symbol'
+import { Route as ApiBackendSplatRouteImport } from './routes/api/backend.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ResearchSymbolRoute = ResearchSymbolRouteImport.update({
   path: '/research/$symbol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBackendSplatRoute = ApiBackendSplatRouteImport.update({
+  id: '/api/backend/$',
+  path: '/api/backend/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/wallets': typeof WalletsRoute
   '/research/$symbol': typeof ResearchSymbolRoute
   '/research/': typeof ResearchIndexRoute
+  '/api/backend/$': typeof ApiBackendSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/wallets': typeof WalletsRoute
   '/research/$symbol': typeof ResearchSymbolRoute
   '/research': typeof ResearchIndexRoute
+  '/api/backend/$': typeof ApiBackendSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/wallets': typeof WalletsRoute
   '/research/$symbol': typeof ResearchSymbolRoute
   '/research/': typeof ResearchIndexRoute
+  '/api/backend/$': typeof ApiBackendSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/research/$symbol'
     | '/research/'
+    | '/api/backend/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/research/$symbol'
     | '/research'
+    | '/api/backend/$'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/research/$symbol'
     | '/research/'
+    | '/api/backend/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   WalletsRoute: typeof WalletsRoute
   ResearchSymbolRoute: typeof ResearchSymbolRoute
   ResearchIndexRoute: typeof ResearchIndexRoute
+  ApiBackendSplatRoute: typeof ApiBackendSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResearchSymbolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/backend/$': {
+      id: '/api/backend/$'
+      path: '/api/backend/$'
+      fullPath: '/api/backend/$'
+      preLoaderRoute: typeof ApiBackendSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletsRoute: WalletsRoute,
   ResearchSymbolRoute: ResearchSymbolRoute,
   ResearchIndexRoute: ResearchIndexRoute,
+  ApiBackendSplatRoute: ApiBackendSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
