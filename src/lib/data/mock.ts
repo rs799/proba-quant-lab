@@ -123,14 +123,14 @@ export const discovery = envelope<DiscoveryRow[]>(
       socialVelocity: n(-1.5, 3),
       funding: n(-0.02, 0.06),
       oiChange: n(-20, 45),
-      unlockRisk: n(0, 32),
+      unlockRisk: i < 2 ? 0 : n(0, 22),
       fundGrowth: n(-20, 65),
       regime: (["Aligned", "Aligned", "Neutral", "Against"] as const)[Math.floor(rnd() * 4)]!,
       p20: n(0.12, 0.55),
-      p50: n(0.05, 0.42),
+      p50: n(0.06, 0.44),
       p100: n(0.01, 0.2),
       expReturn: n(-9, 19),
-      downside: n(0.25, 0.65),
+      downside: n(0.22, 0.6),
     };
     return { ...base, status: classifySignal(base) };
   }),
