@@ -50,7 +50,7 @@ export function MetricStrip({ items, columns }: { items: Metric[]; columns?: num
 }
 
 /* ---------------------------------------------------------- KV list */
-export function KV({ rows, className }: { rows: { k: string; v: ReactNode; tone?: "pos" | "neg" | "neutral" | "warn" }[]; className?: string }) {
+export function KV({ rows, className }: { rows: { k: string; v: ReactNode; tone?: "pos" | "neg" | "neutral" | "warn" | undefined }[]; className?: string }) {
   return (
     <dl className={cn("text-[12px]", className)}>
       {rows.map((r) => (

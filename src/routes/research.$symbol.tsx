@@ -26,7 +26,7 @@ export const Route = createFileRoute("/research/$symbol")({
 
 function Research() {
   const r = Route.useLoaderData();
-  const q = D.forwardDist30d[r.symbol] ?? D.forwardDist30d.default!;
+  const q = D.forwardDist30d[r.symbol] ?? D.forwardDist30d["default"]!;
   const scale = r.symbol === "BTC" ? 0.3 : r.symbol === "ETH" ? 0.45 : 1;
   const q7 = { p10: q.p10 * 0.45, p25: q.p25 * 0.45, p50: q.p50 * 0.35, p75: q.p75 * 0.45, p90: q.p90 * 0.45 };
   const q90 = { p10: q.p10 * 1.5, p25: q.p25 * 1.5, p50: q.p50 * 1.8, p75: q.p75 * 1.8, p90: q.p90 * 1.9 };
@@ -260,10 +260,10 @@ function Research() {
   );
 }
 
-function H({ k, v, tone }: { k: string; v: string; tone?: string }) {
+function H({ k, v, tone }: { k: string; v: string; tone?: string | undefined }) {
   return <div><div className="label-xs">{k}</div><div className={cn("num text-text-1 text-[12.5px]", tone)}>{v}</div></div>;
 }
-function O({ k, v, tone }: { k: string; v: string; tone?: string }) {
+function O({ k, v, tone }: { k: string; v: string; tone?: string | undefined }) {
   return <div><div className="text-[10px] text-text-3">{k}</div><div className={cn("num text-[15px] text-text-1 mt-0.5", tone)}>{v}</div></div>;
 }
 function rank(symbol: string, key: "expReturn" | "p50" | "smartMoneyFlow" | "relStrength" | "liquidity") {
