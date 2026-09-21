@@ -2,16 +2,24 @@
  * Data contracts for the research terminal.
  * Every payload carries a `source` and `asOf` so the UI can distinguish
  * real backend output from development mock data, and stale from fresh.
+ *
+ * `Num = number | null`: null means the backend does not (yet) provide the
+ * measurement. The UI renders it as "—" / "Awaiting ingestion" and never
+ * substitutes an invented value.
  */
 
 export type DataSource = "mock" | "api";
 export type DataState = "ok" | "no_data" | "stale" | "api_error" | "not_applicable";
+
+export type Num = number | null;
 
 export interface Envelope<T> {
   source: DataSource;
   asOf: string; // ISO timestamp
   state: DataState;
   data: T | null;
+  /** Populated when state is "api_error". */
+  error?: string;
 }
 
 export type Regime = "Risk-On / Expansion" | "Risk-On / Late" | "Neutral" | "Risk-Off / Contraction" | "Risk-Off / Capitulation";
@@ -43,27 +51,29 @@ export interface DiscoveryRow {
   symbol: string;
   name: string;
   chain: string;
-  price: number;
-  mcap: number;
-  liquidity: number;
-  vol24h: number;
-  ret7d: number;
-  ret30d: number;
-  relStrength: number;
-  smartMoneyFlow: number; // z-score
-  holderGrowth: number; // pct 30d
-  socialVelocity: number; // z-score
-  funding: number; // pct 8h
-  oiChange: number; // pct 24h
-  unlockRisk: number; // unlock / mcap pct 90d
-  fundGrowth: number; // pct 30d
-  regime: "Aligned" | "Neutral" | "Against";
-  p20: number;
-  p50: number;
-  p100: number;
-  expReturn: number;
-  downside: number; // P(-20% before +50%)
-  status: SignalStatus;
+  address?: string;
+  price: Num;
+  mcap: Num; // FDV when the backend only reports fully diluted valuation
+  liquidity: Num;
+  vol24h: Num;
+  ret7d: Num;
+  ret30d: Num;
+  relStrength: Num;
+  smartMoneyFlow: Num; // z-score
+  holderGrowth: Num; // pct 30d
+  socialVelocity: Num; // z-score
+  funding: Num; // pct 8h
+  oiChange: Num; // pct 24h
+  unlockRisk: Num; // unlock / mcap pct 90d
+  fundGrowth: Num; // pct 30d
+  regime: "Aligned" | "Neutral" | "Against" | null;
+  p20: Num;
+  p50: Num;
+  p100: Num;
+  expReturn: Num;
+  downside: Num; // P(-20% before +50%)
+  /** null = not enough ingested inputs to classify */
+  status: SignalStatus | null;
 }
 
 export interface Quantiles {
@@ -97,16 +107,16 @@ export interface EdgeRecord {
   factor: string;
   target: string;
   holding: string;
-  n: number;
-  isSharpe: number;
-  oosSharpe: number;
-  isIC: number;
-  oosIC: number;
-  maxDD: number;
-  turnover: number;
-  regimeDep: "Low" | "Medium" | "High";
-  paramStab: "Stable" | "Moderate" | "Fragile";
-  dataQuality: number;
+  n: Num;
+  isSharpe: Num;
+  oosSharpe: Num;
+  isIC: Num;
+  oosIC: Num;
+  maxDD: Num;
+  turnover: Num;
+  regimeDep: "Low" | "Medium" | "High" | null;
+  paramStab: "Stable" | "Moderate" | "Fragile" | null;
+  dataQuality: Num;
   lastTested: string;
   status: EdgeStatus;
 }
@@ -114,36 +124,40 @@ export interface EdgeRecord {
 export interface WalletRecord {
   address: string;
   chain: string;
-  ageDays: number;
-  pnlUsd: number;
-  winRate: number;
-  medianHoldDays: number;
-  avgPosUsd: number;
-  trades: number;
-  hit2x: number;
-  hit5x: number;
-  hit10x: number;
-  predictiveIC: number;
+  ageDays: Num;
+  pnlUsd: Num;
+  winRate: Num;
+  medianHoldDays: Num;
+  avgPosUsd: Num;
+  trades: Num;
+  hit2x: Num;
+  hit5x: Num;
+  hit10x: Num;
+  predictiveIC: Num;
   classification: string;
   cluster: string;
-  linked: number;
-  unrealizedUsd: number;
+  linked: Num;
+  unrealizedUsd: Num;
+  /** Backend reputation score (0-100) when provided. */
+  reputation?: Num;
+  /** e.g. "complete", "age_is_lower_bound" */
+  completeness?: string;
 }
 
 export interface Position {
   symbol: string;
-  size: number;
-  entry: number;
-  price: number;
-  unrealized: number;
-  realized: number;
-  expReturn: number;
-  expVol: number;
-  downside: number;
-  liquidity: number;
-  contribution: number;
-  corrBtc: number;
-  riskContribution: number;
+  size: Num;
+  entry: Num;
+  price: Num;
+  unrealized: Num;
+  realized: Num;
+  expReturn: Num;
+  expVol: Num;
+  downside: Num;
+  liquidity: Num;
+  contribution: Num;
+  corrBtc: Num;
+  riskContribution: Num;
 }
 
 export interface ProviderHealth {
