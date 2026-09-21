@@ -23,9 +23,10 @@ export const Route = createFileRoute("/discovery")({
 
 const STATUSES: SignalStatus[] = ["Positive Expected Alpha", "Signal", "Watch", "Research", "Deteriorating", "Avoid"];
 
-const pct = (k: keyof DiscoveryRow, d = 1): ColumnDef<DiscoveryRow, number>["cell"] => ({ getValue }) => <span className={signClass(getValue())}>{fmtPct(getValue(), d)}</span>;
-const prob = (): ColumnDef<DiscoveryRow, number>["cell"] => ({ getValue }) => <span className="text-text-1">{(getValue() * 100).toFixed(1)}%</span>;
-const z = (): ColumnDef<DiscoveryRow, number>["cell"] => ({ getValue }) => <span className={signClass(getValue(), 0.5)}>{fmtZ(getValue())}</span>;
+type Cell = (ctx: { getValue: () => any }) => React.ReactNode;
+const pct = (_k: keyof DiscoveryRow, d = 1): Cell => ({ getValue }) => <span className={signClass(getValue())}>{fmtPct(getValue(), d)}</span>;
+const prob = (): Cell => ({ getValue }) => <span className="text-text-1">{(getValue() * 100).toFixed(1)}%</span>;
+const z = (): Cell => ({ getValue }) => <span className={signClass(getValue(), 0.5)}>{fmtZ(getValue())}</span>;
 
 const columns: ColumnDef<DiscoveryRow, any>[] = [
   { accessorKey: "symbol", header: "Asset", meta: { align: "left" }, enableHiding: false, cell: ({ row }) => <span><span className="num text-text-1">{row.original.symbol}</span><span className="text-text-3 ml-1.5 text-[10px]">{row.original.chain}</span></span> },

@@ -109,8 +109,8 @@ export const discovery = envelope<DiscoveryRow[]>(
   NAMES.map(([symbol, name, chain], i) => {
     const rnd = mulberry32(1000 + i);
     const n = (lo: number, hi: number) => lo + (hi - lo) * rnd();
-    const mcap = i < 3 ? [2.23e12, 5.58e11, 1.12e11][i] : Math.exp(n(Math.log(3e7), Math.log(2e10)));
-    const price = i < 3 ? [112481, 4631, 241.2][i] : Math.exp(n(Math.log(0.05), Math.log(400)));
+    const mcap: number = i < 3 ? [2.23e12, 5.58e11, 1.12e11][i]! : Math.exp(n(Math.log(3e7), Math.log(2e10)));
+    const price: number = i < 3 ? [112481, 4631, 241.2][i]! : Math.exp(n(Math.log(0.05), Math.log(400)));
     const base = {
       symbol, name, chain, price, mcap,
       liquidity: mcap * n(0.004, 0.06),
