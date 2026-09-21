@@ -10,33 +10,180 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as BacktestsRouteImport } from './routes/backtests'
+import { Route as DiscoveryRouteImport } from './routes/discovery'
+import { Route as FactorsRouteImport } from './routes/factors'
+import { Route as MarketsRouteImport } from './routes/markets'
+import { Route as ModelsRouteImport } from './routes/models'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as SystemRouteImport } from './routes/system'
+import { Route as WalletsRouteImport } from './routes/wallets'
+import { Route as ResearchIndexRouteImport } from './routes/research.index'
+import { Route as ResearchSymbolRouteImport } from './routes/research.$symbol'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BacktestsRoute = BacktestsRouteImport.update({
+  id: '/backtests',
+  path: '/backtests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoveryRoute = DiscoveryRouteImport.update({
+  id: '/discovery',
+  path: '/discovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FactorsRoute = FactorsRouteImport.update({
+  id: '/factors',
+  path: '/factors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsRoute = MarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModelsRoute = ModelsRouteImport.update({
+  id: '/models',
+  path: '/models',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SystemRoute = SystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletsRoute = WalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResearchIndexRoute = ResearchIndexRouteImport.update({
+  id: '/research/',
+  path: '/research/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResearchSymbolRoute = ResearchSymbolRouteImport.update({
+  id: '/research/$symbol',
+  path: '/research/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
+  '/backtests': typeof BacktestsRoute
+  '/discovery': typeof DiscoveryRoute
+  '/factors': typeof FactorsRoute
+  '/markets': typeof MarketsRoute
+  '/models': typeof ModelsRoute
+  '/portfolio': typeof PortfolioRoute
+  '/system': typeof SystemRoute
+  '/wallets': typeof WalletsRoute
+  '/research/$symbol': typeof ResearchSymbolRoute
+  '/research/': typeof ResearchIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
+  '/backtests': typeof BacktestsRoute
+  '/discovery': typeof DiscoveryRoute
+  '/factors': typeof FactorsRoute
+  '/markets': typeof MarketsRoute
+  '/models': typeof ModelsRoute
+  '/portfolio': typeof PortfolioRoute
+  '/system': typeof SystemRoute
+  '/wallets': typeof WalletsRoute
+  '/research/$symbol': typeof ResearchSymbolRoute
+  '/research': typeof ResearchIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
+  '/backtests': typeof BacktestsRoute
+  '/discovery': typeof DiscoveryRoute
+  '/factors': typeof FactorsRoute
+  '/markets': typeof MarketsRoute
+  '/models': typeof ModelsRoute
+  '/portfolio': typeof PortfolioRoute
+  '/system': typeof SystemRoute
+  '/wallets': typeof WalletsRoute
+  '/research/$symbol': typeof ResearchSymbolRoute
+  '/research/': typeof ResearchIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/alerts'
+    | '/backtests'
+    | '/discovery'
+    | '/factors'
+    | '/markets'
+    | '/models'
+    | '/portfolio'
+    | '/system'
+    | '/wallets'
+    | '/research/$symbol'
+    | '/research/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/alerts'
+    | '/backtests'
+    | '/discovery'
+    | '/factors'
+    | '/markets'
+    | '/models'
+    | '/portfolio'
+    | '/system'
+    | '/wallets'
+    | '/research/$symbol'
+    | '/research'
+  id:
+    | '__root__'
+    | '/'
+    | '/alerts'
+    | '/backtests'
+    | '/discovery'
+    | '/factors'
+    | '/markets'
+    | '/models'
+    | '/portfolio'
+    | '/system'
+    | '/wallets'
+    | '/research/$symbol'
+    | '/research/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlertsRoute: typeof AlertsRoute
+  BacktestsRoute: typeof BacktestsRoute
+  DiscoveryRoute: typeof DiscoveryRoute
+  FactorsRoute: typeof FactorsRoute
+  MarketsRoute: typeof MarketsRoute
+  ModelsRoute: typeof ModelsRoute
+  PortfolioRoute: typeof PortfolioRoute
+  SystemRoute: typeof SystemRoute
+  WalletsRoute: typeof WalletsRoute
+  ResearchSymbolRoute: typeof ResearchSymbolRoute
+  ResearchIndexRoute: typeof ResearchIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +195,99 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/backtests': {
+      id: '/backtests'
+      path: '/backtests'
+      fullPath: '/backtests'
+      preLoaderRoute: typeof BacktestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discovery': {
+      id: '/discovery'
+      path: '/discovery'
+      fullPath: '/discovery'
+      preLoaderRoute: typeof DiscoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/factors': {
+      id: '/factors'
+      path: '/factors'
+      fullPath: '/factors'
+      preLoaderRoute: typeof FactorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets': {
+      id: '/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof MarketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/models': {
+      id: '/models'
+      path: '/models'
+      fullPath: '/models'
+      preLoaderRoute: typeof ModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system': {
+      id: '/system'
+      path: '/system'
+      fullPath: '/system'
+      preLoaderRoute: typeof SystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallets': {
+      id: '/wallets'
+      path: '/wallets'
+      fullPath: '/wallets'
+      preLoaderRoute: typeof WalletsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/research/': {
+      id: '/research/'
+      path: '/research'
+      fullPath: '/research/'
+      preLoaderRoute: typeof ResearchIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/research/$symbol': {
+      id: '/research/$symbol'
+      path: '/research/$symbol'
+      fullPath: '/research/$symbol'
+      preLoaderRoute: typeof ResearchSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlertsRoute: AlertsRoute,
+  BacktestsRoute: BacktestsRoute,
+  DiscoveryRoute: DiscoveryRoute,
+  FactorsRoute: FactorsRoute,
+  MarketsRoute: MarketsRoute,
+  ModelsRoute: ModelsRoute,
+  PortfolioRoute: PortfolioRoute,
+  SystemRoute: SystemRoute,
+  WalletsRoute: WalletsRoute,
+  ResearchSymbolRoute: ResearchSymbolRoute,
+  ResearchIndexRoute: ResearchIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
