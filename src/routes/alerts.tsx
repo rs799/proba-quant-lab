@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { data as D, type AlertItem } from "@/lib/data";
+import { useAlertsQuery, type AlertItem } from "@/lib/data";
 import { AlertFeed } from "@/components/terminal/AlertFeed";
 import { PageHeader, Panel, KV } from "@/components/terminal/primitives";
+import { QueryState, SourceTag } from "@/components/terminal/QueryState";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/alerts")({
@@ -23,11 +24,12 @@ const CATS: (AlertItem["category"] | "ALL")[] = ["ALL", "SIGNAL", "THESIS", "RIS
 
 function Alerts() {
   const [cat, setCat] = useState<(typeof CATS)[number]>("ALL");
-  const all = D.alerts.data!;
+  const query = useAlertsQuery();
+  const all = query.data?.data ?? [];
   const items = useMemo(() => all.filter((a) => cat === "ALL" || a.category === cat), [all, cat]);
   return (
     <div className="space-y-3">
-      <PageHeader title="Alerts" sub="Every alert cites the measurement that triggered it. Thresholds are defined per rule and versioned." />
+      <PageHeader title="Alerts" sub="Every alert cites the measurement that triggered it. Thresholds are defined per rule and versioned." right={<SourceTag env={query.data} />} />
       <div className="grid grid-cols-12 gap-3">
         <div className="col-span-12 xl:col-span-9">
           <div className="flex gap-1 mb-2 text-[10px]">
@@ -37,7 +39,9 @@ function Alerts() {
               </button>
             ))}
           </div>
-          <Panel dense><AlertFeed items={items} /></Panel>
+          <QueryState query={query} emptyReason="the backend alert feed is empty">
+            {() => <Panel dense><AlertFeed items={items} /></Panel>}
+          </QueryState>
         </div>
         <Panel title="Active rules" className="col-span-12 xl:col-span-3">
           <KV rows={[
@@ -50,7 +54,7 @@ function Alerts() {
             { k: "Social concentration", v: "top-20 authors > 50%" },
             { k: "Ingestion failure", v: "3 consecutive errors" },
           ]} />
-          <div className="mt-3 text-[10.5px] text-text-3">Delivery: in-app only. Webhook / email routing awaiting backend.</div>
+          <div className="mt-3 text-[10.5px] text-text-3">Rule definitions are the intended backend contract; only alerts actually emitted by the backend feed are listed on the left.</div>
         </Panel>
       </div>
     </div>
