@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { data as D, type EdgeRecord, type EdgeStatus } from "@/lib/data";
+import { useEdges, type EdgeRecord, type EdgeStatus } from "@/lib/data";
+import { fmtFixed, fmtNum, fmtPct } from "@/lib/format";
 import { DataTable } from "@/components/terminal/DataTable";
-import { EdgeTag, KV, PageHeader, Panel } from "@/components/terminal/primitives";
+import { EdgeTag, KV, PageHeader, Panel, Tag } from "@/components/terminal/primitives";
+import { QueryState, SourceTag } from "@/components/terminal/QueryState";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/models")({
@@ -21,46 +23,48 @@ export const Route = createFileRoute("/models")({
 });
 
 const ORDER: EdgeStatus[] = ["ACTIVE", "VALIDATED", "RESEARCH", "DEGRADING", "SUSPENDED", "RETIRED"];
+const oosVsIs = (oos: number | null, is: number | null) => (oos !== null && is !== null && Math.abs(oos) < Math.abs(is) * 0.5 ? "text-neg" : "text-text-1");
+
 const columns: ColumnDef<EdgeRecord, any>[] = [
   { accessorKey: "id", header: "Edge ID", meta: { align: "left" }, enableHiding: false, cell: ({ getValue }) => <span className="num text-text-1">{getValue()}</span> },
   { accessorKey: "hypothesis", header: "Hypothesis", meta: { align: "left", className: "max-w-[320px] truncate" }, cell: ({ getValue }) => <span className="text-text-2">{getValue()}</span> },
   { accessorKey: "factor", header: "Factor", meta: { align: "left" } },
   { accessorKey: "target", header: "Target", meta: { align: "left" } },
   { accessorKey: "holding", header: "Hold" },
-  { accessorKey: "n", header: "N", cell: ({ getValue }) => (getValue() as number).toLocaleString() },
-  { accessorKey: "isIC", header: "IS IC", cell: ({ getValue }) => (getValue() as number).toFixed(3) },
-  { accessorKey: "oosIC", header: "OOS IC", cell: ({ row }) => <span className={cn(Math.abs(row.original.oosIC) < Math.abs(row.original.isIC) * 0.5 ? "text-neg" : "text-text-1")}>{row.original.oosIC.toFixed(3)}</span> },
-  { accessorKey: "isSharpe", header: "IS Sharpe", cell: ({ getValue }) => (getValue() as number).toFixed(2) },
-  { accessorKey: "oosSharpe", header: "OOS Sharpe", cell: ({ row }) => <span className={cn(row.original.oosSharpe < row.original.isSharpe * 0.5 ? "text-neg" : "text-pos")}>{row.original.oosSharpe.toFixed(2)}</span> },
-  { accessorKey: "maxDD", header: "Max DD", cell: ({ getValue }) => <span className="text-neg">{(getValue() as number).toFixed(1)}%</span> },
-  { accessorKey: "turnover", header: "Turnover", cell: ({ getValue }) => `${((getValue() as number) * 100).toFixed(0)}%` },
-  { accessorKey: "regimeDep", header: "Regime dep.", cell: ({ getValue }) => <span className={getValue() === "High" ? "text-warn" : ""}>{getValue()}</span> },
-  { accessorKey: "paramStab", header: "Param. stab.", cell: ({ getValue }) => <span className={getValue() === "Fragile" ? "text-neg" : getValue() === "Stable" ? "text-pos" : ""}>{getValue()}</span> },
-  { accessorKey: "dataQuality", header: "Data Q", cell: ({ getValue }) => <span className={(getValue() as number) < 0.8 ? "text-warn" : ""}>{((getValue() as number) * 100).toFixed(0)}%</span> },
+  { accessorKey: "n", header: "N", cell: ({ getValue }) => fmtNum(getValue(), 0) },
+  { accessorKey: "isIC", header: "IS IC", cell: ({ getValue }) => fmtFixed(getValue(), 3) },
+  { accessorKey: "oosIC", header: "OOS IC", cell: ({ row }) => <span className={oosVsIs(row.original.oosIC, row.original.isIC)}>{fmtFixed(row.original.oosIC, 3)}</span> },
+  { accessorKey: "isSharpe", header: "IS Sharpe", cell: ({ getValue }) => fmtFixed(getValue(), 2) },
+  { accessorKey: "oosSharpe", header: "OOS Sharpe", cell: ({ row }) => <span className={oosVsIs(row.original.oosSharpe, row.original.isSharpe)}>{fmtFixed(row.original.oosSharpe, 2)}</span> },
+  { accessorKey: "maxDD", header: "Max DD", cell: ({ getValue }) => <span className="text-neg">{fmtPct(getValue(), 1, false)}</span> },
+  { accessorKey: "turnover", header: "Turnover", cell: ({ getValue }) => (getValue() === null ? "—" : `${((getValue() as number) * 100).toFixed(0)}%`) },
+  { accessorKey: "regimeDep", header: "Regime dep.", cell: ({ getValue }) => <span className={getValue() === "High" ? "text-warn" : ""}>{getValue() ?? "—"}</span> },
+  { accessorKey: "paramStab", header: "Param. stab.", cell: ({ getValue }) => <span className={getValue() === "Fragile" ? "text-neg" : getValue() === "Stable" ? "text-pos" : ""}>{getValue() ?? "—"}</span> },
+  { accessorKey: "dataQuality", header: "Data Q", cell: ({ getValue }) => (getValue() === null ? "—" : <span className={(getValue() as number) < 0.8 ? "text-warn" : ""}>{((getValue() as number) * 100).toFixed(0)}%</span>) },
   { accessorKey: "lastTested", header: "Last tested" },
   { accessorKey: "status", header: "Status", enableHiding: false, cell: ({ getValue }) => <EdgeTag s={getValue()} />, sortingFn: (a, b) => ORDER.indexOf(a.original.status) - ORDER.indexOf(b.original.status) },
 ];
 
 function Models() {
-  const [sel, setSel] = useState<EdgeRecord | null>(D.edges.data![0]!);
-  const edges = D.edges.data!;
+  const query = useEdges();
+  const edges = query.data?.data ?? [];
+  const [sel, setSel] = useState<EdgeRecord | null>(null);
   const counts = ORDER.map((s) => [s, edges.filter((e) => e.status === s).length] as const);
+
   return (
     <div className="space-y-3">
-      <PageHeader title="Models · Edge Registry" sub="Every entry is a falsifiable hypothesis with recorded in-sample and out-of-sample evidence. Status changes are rule-driven." />
+      <PageHeader
+        title="Models · Edge Registry"
+        sub="Every entry is a falsifiable hypothesis with recorded in-sample and out-of-sample evidence. Status changes are rule-driven."
+        right={<SourceTag env={query.data} />}
+      />
       <div className="grid grid-cols-12 gap-3">
-        <Panel title="Production model" className="col-span-12 lg:col-span-4">
+        <Panel title="Production model" right={<Tag>Development mock data</Tag>} className="col-span-12 lg:col-span-4">
           <KV rows={[
-            { k: "Model", v: "xs-prob v0.4.2" },
-            { k: "Type", v: "Gradient-boosted xsec classifier + isotonic calibration" },
-            { k: "Targets", v: "+20/7D · +50/30D · +100/90D · DD-first" },
-            { k: "Features", v: "41 (from 6 active edges)" },
-            { k: "Training window", v: "2021-01 → 2025-07" },
-            { k: "OOS Brier (30D)", v: "0.183" },
-            { k: "OOS log-loss", v: "0.541" },
-            { k: "Calibration slope", v: "0.94" },
-            { k: "Last retrain", v: "2026-09-14" },
-            { k: "Drift monitor", v: "PSI 0.08 (ok)", tone: "pos" },
+            { k: "Model", v: "None deployed" },
+            { k: "Status", v: "No baseline has cleared OOS + robustness testing yet" },
+            { k: "Training window", v: "—", tone: undefined },
+            { k: "Note", v: "Research engine requires far more accumulated point-in-time history before a model can be trained honestly." },
           ]} />
         </Panel>
         <Panel title="Registry status" className="col-span-12 lg:col-span-2" dense>
@@ -69,7 +73,7 @@ function Models() {
           </ul>
         </Panel>
         <Panel title={sel ? `${sel.id} — detail` : "Select an edge"} className="col-span-12 lg:col-span-6">
-          {sel && (
+          {sel ? (
             <>
               <p className="text-[12px] text-text-1 mb-2">{sel.hypothesis}</p>
               <div className="grid grid-cols-2 gap-x-6">
@@ -77,25 +81,31 @@ function Models() {
                   { k: "Universe", v: sel.universe },
                   { k: "Factor → target", v: `${sel.factor} → ${sel.target}` },
                   { k: "Holding period", v: sel.holding },
-                  { k: "Sample size", v: sel.n.toLocaleString() },
-                  { k: "Regime dependence", v: sel.regimeDep, tone: sel.regimeDep === "High" ? "warn" : undefined },
-                  { k: "Parameter stability", v: sel.paramStab, tone: sel.paramStab === "Fragile" ? "neg" : sel.paramStab === "Stable" ? "pos" : undefined },
+                  { k: "Sample size", v: fmtNum(sel.n, 0) },
+                  { k: "Regime dependence", v: sel.regimeDep ?? "—", tone: sel.regimeDep === "High" ? "warn" : undefined },
+                  { k: "Parameter stability", v: sel.paramStab ?? "—", tone: sel.paramStab === "Fragile" ? "neg" : sel.paramStab === "Stable" ? "pos" : undefined },
                 ]} />
                 <KV rows={[
-                  { k: "IS IC / OOS IC", v: `${sel.isIC.toFixed(3)} / ${sel.oosIC.toFixed(3)}` },
-                  { k: "IS Sharpe / OOS Sharpe", v: `${sel.isSharpe.toFixed(2)} / ${sel.oosSharpe.toFixed(2)}` },
-                  { k: "IC retention", v: `${((sel.oosIC / sel.isIC) * 100).toFixed(0)}%`, tone: sel.oosIC / sel.isIC < 0.5 ? "neg" : "pos" },
-                  { k: "Max drawdown", v: `${sel.maxDD.toFixed(1)}%`, tone: "neg" },
-                  { k: "Data quality", v: `${(sel.dataQuality * 100).toFixed(0)}%` },
+                  { k: "IS IC / OOS IC", v: `${fmtFixed(sel.isIC, 3)} / ${fmtFixed(sel.oosIC, 3)}` },
+                  { k: "IS Sharpe / OOS Sharpe", v: `${fmtFixed(sel.isSharpe, 2)} / ${fmtFixed(sel.oosSharpe, 2)}` },
+                  { k: "IC retention", v: sel.oosIC !== null && sel.isIC ? `${((sel.oosIC / sel.isIC) * 100).toFixed(0)}%` : "—", tone: sel.oosIC !== null && sel.isIC && sel.oosIC / sel.isIC < 0.5 ? "neg" : undefined },
+                  { k: "Max drawdown", v: fmtPct(sel.maxDD, 1, false), tone: "neg" },
+                  { k: "Data quality", v: sel.dataQuality !== null ? `${(sel.dataQuality * 100).toFixed(0)}%` : "—" },
                   { k: "Last tested", v: sel.lastTested },
                 ]} />
               </div>
               <div className="mt-2 text-[10.5px] text-text-3">Lifecycle rules: ACTIVE requires OOS IC retention ≥ 50% and rolling 90D IC &gt; 0. DEGRADING after 2 consecutive 30D windows below threshold. SUSPENDED after 3.</div>
             </>
+          ) : (
+            <p className="text-[11px] text-text-3">Select a row below to see its detail. This registry starts empty and only gains entries once a strategy has actually passed out-of-sample and robustness testing — see the research engine.</p>
           )}
         </Panel>
       </div>
-      <DataTable data={edges} columns={columns} searchable searchPlaceholder="ID / hypothesis / factor…" initialSort={[{ id: "status", desc: false }]} onRowClick={setSel} maxHeight="60vh" />
+      <QueryState query={query} emptyReason="no quantitative edges registered yet. Models under evaluation will appear here once ingested.">
+        {(data) => (
+          <DataTable data={data} columns={columns} searchable searchPlaceholder="ID / hypothesis / factor…" initialSort={[{ id: "status", desc: false }]} onRowClick={setSel} maxHeight="60vh" />
+        )}
+      </QueryState>
     </div>
   );
 }

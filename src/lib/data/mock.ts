@@ -97,11 +97,11 @@ const NAMES: [string, string, string][] = [
 
 /** Explicit, inspectable status rules — not a black box. */
 export function classifySignal(r: Omit<DiscoveryRow, "status">): SignalStatus {
-  if (r.liquidity < 2e6 || r.unlockRisk > 25) return "Avoid";
-  if (r.smartMoneyFlow < -1.5 || (r.ret7d < -12 && r.oiChange > 15)) return "Deteriorating";
-  if (r.expReturn > 8 && r.p50 > 0.25 && r.downside < 0.45 && r.regime === "Aligned") return "Positive Expected Alpha";
-  if (r.expReturn > 4 && r.p50 > 0.18) return "Signal";
-  if (r.smartMoneyFlow > 1 || r.relStrength > 1) return "Watch";
+  if (r.liquidity! < 2e6 || r.unlockRisk! > 25) return "Avoid";
+  if (r.smartMoneyFlow! < -1.5 || (r.ret7d! < -12 && r.oiChange! > 15)) return "Deteriorating";
+  if (r.expReturn! > 8 && r.p50! > 0.25 && r.downside! < 0.45 && r.regime === "Aligned") return "Positive Expected Alpha";
+  if (r.expReturn! > 4 && r.p50! > 0.18) return "Signal";
+  if (r.smartMoneyFlow! > 1 || r.relStrength! > 1) return "Watch";
   return "Research";
 }
 

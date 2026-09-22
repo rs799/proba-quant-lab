@@ -185,19 +185,19 @@ type Row = Record<string, unknown>;
 
 export async function fetchDiscovery(): Promise<Envelope<DiscoveryRow[]>> {
   const res = await get<Row[]>("/candidates");
-  if (!res.data) return res as Envelope<DiscoveryRow[]>;
+  if (!res.data) return { ...res, data: null };
   return { ...res, data: res.data.map(mapCandidate) };
 }
 
 export async function fetchAlerts(limit = 100): Promise<Envelope<AlertItem[]>> {
   const res = await get<Row[]>(`/alerts?limit=${limit}`);
-  if (!res.data) return res as Envelope<AlertItem[]>;
+  if (!res.data) return { ...res, data: null };
   return { ...res, data: res.data.map(mapAlert) };
 }
 
 export async function fetchHoldings(): Promise<Envelope<Position[]>> {
   const res = await get<Row[]>("/holdings");
-  if (!res.data) return res as Envelope<Position[]>;
+  if (!res.data) return { ...res, data: null };
   return { ...res, data: res.data.map(mapPosition) };
 }
 
@@ -208,7 +208,7 @@ export interface PortfolioPayload {
 
 export async function fetchPortfolio(): Promise<Envelope<PortfolioPayload>> {
   const res = await get<{ positions?: Row[]; note?: string }>("/portfolio");
-  if (!res.data) return res as Envelope<PortfolioPayload>;
+  if (!res.data) return { ...res, data: null };
   const positions = (res.data.positions ?? []).map(mapPosition);
   return {
     ...res,
@@ -219,7 +219,7 @@ export async function fetchPortfolio(): Promise<Envelope<PortfolioPayload>> {
 
 export async function fetchEdges(): Promise<Envelope<EdgeRecord[]>> {
   const res = await get<Row[]>("/edge-registry");
-  if (!res.data) return res as Envelope<EdgeRecord[]>;
+  if (!res.data) return { ...res, data: null };
   return { ...res, data: res.data.map(mapEdge) };
 }
 
@@ -236,7 +236,7 @@ export interface TokenWallets {
 
 export async function fetchWallets(token: string): Promise<Envelope<TokenWallets>> {
   const res = await get<Row>(`/wallets/${encodeURIComponent(token)}`);
-  if (!res.data) return res as Envelope<TokenWallets>;
+  if (!res.data) return { ...res, data: null };
   const raw = res.data;
   const chain = String(pick(raw, "chain") ?? "—");
   const wallets = Array.isArray(raw["wallets"]) ? (raw["wallets"] as Row[]).map((w) => mapWallet(w, chain)) : [];

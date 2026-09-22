@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
-import { data as D, type DiscoveryRow } from "@/lib/data";
-import { fmtPct, fmtPrice, fmtUsd, signClass } from "@/lib/format";
+import { useDiscovery, data as D, type DiscoveryRow } from "@/lib/data";
+import { fmtPct, fmtPrice, fmtUsd, fmtZ, signClass } from "@/lib/format";
 import { DataTable } from "@/components/terminal/DataTable";
-import { MetricStrip, PageHeader, Panel, KV } from "@/components/terminal/primitives";
-import { Sparkline } from "@/components/terminal/charts";
+import { MetricStrip, PageHeader, Panel, Unavailable } from "@/components/terminal/primitives";
+import { QueryState, SourceTag } from "@/components/terminal/QueryState";
 
 export const Route = createFileRoute("/markets")({
   head: () => ({
@@ -21,61 +21,57 @@ export const Route = createFileRoute("/markets")({
 });
 
 const columns: ColumnDef<DiscoveryRow, any>[] = [
-  { accessorKey: "symbol", header: "Asset", meta: { align: "left" }, cell: ({ row }) => <span><span className="num text-text-1">{row.original.symbol}</span><span className="text-text-3 ml-1.5">{row.original.name}</span></span> },
+  { accessorKey: "symbol", header: "Asset", meta: { align: "left" }, cell: ({ row }) => <span><span className="num text-text-1">{row.original.symbol}</span><span className="text-text-3 ml-1.5">{row.original.chain}</span></span> },
   { accessorKey: "price", header: "Price", cell: ({ getValue }) => fmtPrice(getValue()) },
-  { id: "spark", header: "30D", enableSorting: false, cell: ({ row }) => <div className="w-20 ml-auto"><Sparkline data={D.priceSeries(row.original.symbol, 30).map((p) => p.close)} tone={row.original.ret30d >= 0 ? "pos" : "neg"} height={20} /></div> },
   { accessorKey: "ret7d", header: "7D", cell: ({ getValue }) => <span className={signClass(getValue())}>{fmtPct(getValue(), 1)}</span> },
   { accessorKey: "ret30d", header: "30D", cell: ({ getValue }) => <span className={signClass(getValue())}>{fmtPct(getValue(), 1)}</span> },
-  { accessorKey: "mcap", header: "Mcap", cell: ({ getValue }) => fmtUsd(getValue()) },
+  { accessorKey: "mcap", header: "FDV", cell: ({ getValue }) => fmtUsd(getValue()) },
   { accessorKey: "vol24h", header: "Vol 24h", cell: ({ getValue }) => fmtUsd(getValue()) },
-  { id: "volMcap", header: "Vol / Mcap", accessorFn: (r) => r.vol24h / r.mcap, cell: ({ getValue }) => (getValue() as number).toFixed(3) },
-  { accessorKey: "funding", header: "Funding", cell: ({ getValue }) => `${(getValue() as number).toFixed(3)}%` },
+  { id: "volMcap", header: "Vol / FDV", accessorFn: (r) => (r.vol24h !== null && r.mcap ? r.vol24h / r.mcap : null), cell: ({ getValue }) => (typeof getValue() === "number" ? getValue().toFixed(3) : "—") },
+  { accessorKey: "funding", header: "Funding", cell: ({ getValue }) => (typeof getValue() === "number" ? `${getValue().toFixed(3)}%` : "—") },
   { accessorKey: "oiChange", header: "ΔOI 24h", cell: ({ getValue }) => <span className={signClass(getValue())}>{fmtPct(getValue(), 1)}</span> },
 ];
 
+function median(a: number[]) { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]!; }
+
 function Markets() {
   const nav = useNavigate();
-  const rows = D.discovery.data!;
-  const up = rows.filter((r) => r.ret7d > 0).length;
+  const query = useDiscovery();
+  const rows = query.data?.data ?? [];
+  const withRet = rows.filter((r) => r.ret7d !== null);
+  const up = withRet.filter((r) => r.ret7d! > 0).length;
+  const medRet = median(withRet.map((r) => r.ret7d!));
+
   return (
     <div className="space-y-3">
-      <PageHeader title="Markets" sub="Universe-wide state. Breadth and positioning feed the regime model." />
+      <PageHeader title="Markets" sub="Universe-wide state. Breadth and positioning feed the regime model." right={<SourceTag env={query.data} />} />
+      <div className="flex items-center justify-between">
+        <span className="label-xs">Market aggregates</span>
+        <SourceTag env={D.marketStats} />
+      </div>
       <MetricStrip items={D.marketStats.data!} />
       <div className="grid grid-cols-12 gap-3">
         <Panel title="Breadth" className="col-span-12 lg:col-span-4">
-          <KV rows={[
-            { k: "Advancers / decliners (7D)", v: `${up} / ${rows.length - up}` },
-            { k: "% above 30D MA", v: "62%" },
-            { k: "% above 200D MA", v: "48%" },
-            { k: "Median 7D return", v: fmtPct(median(rows.map((r) => r.ret7d)), 1), tone: median(rows.map((r) => r.ret7d)) > 0 ? "pos" : "neg" },
-            { k: "Cross-sectional σ (30D)", v: "14.2%" },
-            { k: "Avg pairwise corr (30D)", v: "0.61" },
-          ]} />
+          {withRet.length ? (
+            <div className="text-[11px] space-y-1.5">
+              <div className="flex justify-between"><span className="text-text-2">Advancers / decliners (7D)</span><span className="num text-text-1">{up} / {withRet.length - up}</span></div>
+              <div className="flex justify-between"><span className="text-text-2">Median 7D return</span><span className={`num ${medRet !== null && medRet > 0 ? "text-pos" : "text-neg"}`}>{fmtPct(medRet, 1)}</span></div>
+            </div>
+          ) : (
+            <Unavailable reason="no return data in the current candidate set" />
+          )}
+          <div className="mt-3"><Unavailable reason="moving-average breadth and cross-sectional dispersion require a price history the backend does not expose yet" /></div>
         </Panel>
         <Panel title="Derivatives positioning" className="col-span-12 lg:col-span-4">
-          <KV rows={[
-            { k: "Aggregate OI", v: "$61.4B" },
-            { k: "OI 7D", v: "+6.4%", tone: "pos" },
-            { k: "Funding (OI-weighted, 8h)", v: "0.008%" },
-            { k: "Funding percentile (1Y)", v: "P54" },
-            { k: "Liquidations 24h (L/S)", v: "$129M / $83M" },
-            { k: "Spot / perp volume", v: "0.42" },
-            { k: "3M basis (annualised)", v: "8.1%" },
-          ]} />
+          <Unavailable reason="aggregate OI, funding percentile and liquidation flow are not exposed by any current backend endpoint" />
         </Panel>
         <Panel title="Liquidity" className="col-span-12 lg:col-span-4">
-          <KV rows={[
-            { k: "Stablecoin supply", v: "$284.1B" },
-            { k: "Stablecoin supply 30D", v: "+1.8%", tone: "pos" },
-            { k: "Exchange BTC balance 30D", v: "-2.1%" },
-            { k: "Aggregate DEX depth ±2%", v: "$1.84B" },
-            { k: "Depth 7D", v: "+3.4%", tone: "pos" },
-            { k: "ETF net flow 5D", v: "+$812M", tone: "pos" },
-          ]} />
+          <Unavailable reason="stablecoin supply, exchange balances and DEX depth series are not exposed by any current backend endpoint" />
         </Panel>
       </div>
-      <DataTable data={rows} columns={columns} searchable pageSize={50} initialSort={[{ id: "mcap", desc: true }]} onRowClick={(r) => nav({ to: "/research/$symbol", params: { symbol: r.symbol } })} />
+      <QueryState query={query} emptyReason="the screener has not written any candidates yet">
+        {(data) => <DataTable data={data} columns={columns} searchable pageSize={50} initialSort={[{ id: "mcap", desc: true }]} onRowClick={(r) => nav({ to: "/research/$symbol", params: { symbol: r.symbol } })} />}
+      </QueryState>
     </div>
   );
 }
-function median(a: number[]) { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]!; }
