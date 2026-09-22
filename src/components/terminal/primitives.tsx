@@ -72,7 +72,8 @@ const statusTone: Record<SignalStatus, string> = {
   Deteriorating: "text-warn border-warn/40",
   Avoid: "text-neg border-neg/40",
 };
-export function SignalTag({ s }: { s: SignalStatus }) {
+export function SignalTag({ s }: { s: SignalStatus | null }) {
+  if (!s) return <span className="inline-block border border-border px-1.5 py-px text-[10px] tracking-wide uppercase whitespace-nowrap rounded-sm text-text-3">Unclassified</span>;
   return <span className={cn("inline-block border px-1.5 py-px text-[10px] tracking-wide uppercase whitespace-nowrap rounded-sm", statusTone[s])}>{s}</span>;
 }
 
